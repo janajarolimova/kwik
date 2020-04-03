@@ -4,6 +4,7 @@ import com.jfrog.bintray.gradle.BintrayExtension
 import com.jfrog.bintray.gradle.BintrayPlugin
 import kr.motd.gradle.sphinx.gradle.SphinxTask
 import org.codehaus.plexus.util.Os
+import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile
 import java.util.*
@@ -16,6 +17,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.7.2"
     id("com.jfrog.bintray") version "1.8.4" apply false
     id("kr.motd.sphinx") version "2.6.1"
+    id("org.jetbrains.dokka") version "0.10.1"
 }
 
 reckon {
@@ -47,6 +49,7 @@ allprojects {
 
 subprojects {
     apply(plugin = "org.jetbrains.kotlin.multiplatform")
+    apply(plugin = "org.jetbrains.dokka")
     apply<BintrayPlugin>()
     apply<MavenPublishPlugin>()
     apply<JacocoPlugin>()
@@ -218,8 +221,12 @@ tasks {
         mustRunAfter(subprojects.flatMap { it.tasks.withType(Test::class) })
     }
 
+    val dokka by existing(DokkaTask::class) {
+        subProjects = subprojects.map { it.path }
+    }
+
     val check by existing {
-        dependsOn(sphinx)
+        dependsOn(dokka, sphinx)
 
         finalizedBy(testReport)
     }
